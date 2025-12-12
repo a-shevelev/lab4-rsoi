@@ -88,7 +88,7 @@ jobs:
           CR_ID=${{ secrets.YC_CR_ID }}
           
           echo "Deploying Postgres..."
-          helm upgrade postgres ./charts/postgres --install -n test -f ./charts/postgres/values.yaml
+          helm upgrade postgres ./charts/postgres --install -n default -f ./charts/postgres/values.yaml
 
           echo "Deploying services..."
           
