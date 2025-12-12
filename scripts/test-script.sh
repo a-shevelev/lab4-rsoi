@@ -40,6 +40,13 @@ step() {
 
   kubectl scale deployment "$deployment" -n "$namespace" --replicas "$replicas" 
 
+  if [ "$replicas" -eq 1 ]; then
+      echo "Waiting for deployment $deployment to be ready..."
+      kubectl wait deployment "$deployment" -n "$namespace" --for=condition=Available --timeout=60s
+    else
+      echo "Scaled down, no wait needed."
+    fi
+
   newman run \
     --delay-request=100 \
     --folder=step"$step" \
