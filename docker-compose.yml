@@ -35,7 +35,7 @@ services:
     build:
       context: ./src/library-system
       dockerfile: Dockerfile
-    image: a-shevelev/library:lab4
+    image: library:latest
     container_name: library-service
     ports:
       - "8050:8050"
@@ -51,7 +51,7 @@ services:
     build:
       context: ./src/rating-system
       dockerfile: Dockerfile
-    image: a-shevelev/rating:lab4
+    image: rating:latest
     container_name: rating-service
     ports:
       - "8060:8060"
@@ -67,7 +67,7 @@ services:
     build:
       context: ./src/reservation-system
       dockerfile: Dockerfile
-    image: a-shevelev/reservation:lab4
+    image: reservation:latest
     container_name: reservation-service
     ports:
       - "8070:8070"
@@ -84,8 +84,7 @@ services:
       context: ./src/gateway-api
       dockerfile: Dockerfile
 
-    image: a-shevelev/gateway:lab4
-
+    image: gateway:latest
     container_name: gateway-api
     ports:
       - "8080:8080"

@@ -1,0 +1,4 @@
+CREATE DATABASE reservations;
+CREATE DATABASE libraries;
+CREATE DATABASE ratings;
+

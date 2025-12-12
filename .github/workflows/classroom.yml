@@ -17,18 +17,105 @@ jobs:
 
       - uses: docker/setup-buildx-action@v2
 
-      # TODO build and run unit tests
+      - uses: actions/checkout@v4
 
-      - name: Build images
-        timeout-minutes: 10
-        run: docker compose build --push
+      - uses: docker/setup-buildx-action@v2
 
-      # TODO deploy to k8s with liveness and readyness probes
+      - name: Login to Yandex Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: cr.yandex
+          username: oauth
+          password: ${{ secrets.YC_OAUTH_TOKEN }}
 
-      - name: Wait before services are ready
-        run: kubectl wait -n test -l app.kubernetes.io/name=gateway pod --for=condition=Ready --timeout 3m
+      - name: Build & Push Docker images
+        run: |
+          CR_ID=${{ secrets.YC_CR_ID }}
+          
+          echo "Building Library Service..."
+          docker build -t cr.yandex/$CR_ID/library-service:latest \
+            -f ./src/library-system/Dockerfile ./src/library-system
+          docker push cr.yandex/$CR_ID/library-service:latest
+          
+          echo "Building Rating Service..."
+          docker build -t cr.yandex/$CR_ID/rating-service:latest \
+            -f ./src/rating-system/Dockerfile ./src/rating-system
+          docker push cr.yandex/$CR_ID/rating-service:latest
+          
+          echo "Building Reservation Service..."
+          docker build -t cr.yandex/$CR_ID/reservation-service:latest \
+            -f ./src/reservation-system/Dockerfile ./src/reservation-system
+          docker push cr.yandex/$CR_ID/reservation-service:latest
+          
+          echo "Building Gateway API..."
+          docker build -t cr.yandex/$CR_ID/gateway-api:latest \
+            -f ./src/gateway-api/Dockerfile ./src/gateway-api
+          docker push cr.yandex/$CR_ID/gateway-api:latest
+          
+          echo "Building Postgres (your local custom image)..."
+          docker build -t cr.yandex/$CR_ID/postgres:17 \
+            -f ./postgres/Dockerfile ./postgres
+          docker push cr.yandex/$CR_ID/postgres:17
+
+      - name: Install Yandex CLI, kubectl, helm
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          export PATH="/home/runner/yandex-cloud/bin:$PATH"
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Configure YC
+        run: |
+          yc config set token "${{ secrets.YC_OAUTH_TOKEN }}"
+          yc config set folder-id "${{ secrets.FOLDER_ID }}"
+          yc container registry configure-docker
+
+      - name: Get kube credentials
+        run: yc managed-kubernetes cluster get-credentials library-rsoi --external
+
+      - name: Deploy to Kubernetes
+        run: |
+          CR_ID=${{ secrets.YC_CR_ID }}
+          
+          echo "Deploying Postgres..."
+          helm upgrade postgres ./charts/postgres --install \
+            -n test -f ./charts/postgres/values.yaml \
+            --set image.repository=cr.yandex/$CR_ID/postgres \
+            --set image.tag=17
+          
+          echo "Deploying services..."
+          
+          helm upgrade library-system ./charts/services --install \
+            -n test -f ./charts/services/service-values/libraries-values.yaml \
+            --set image.repository=cr.yandex/$CR_ID/library-service \
+            --set image.tag=latest
+          
+          helm upgrade rating-system ./charts/services --install \
+            -n test -f ./charts/services/service-values/ratings-values.yaml \
+            --set image.repository=cr.yandex/$CR_ID/rating-service \
+            --set image.tag=latest
+          
+          helm upgrade reservation-system ./charts/services --install \
+            -n test -f ./charts/services/service-values/reservations-values.yaml \
+            --set image.repository=cr.yandex/$CR_ID/reservation-service \
+            --set image.tag=latest
+          
+          helm upgrade gateway-api ./charts/services --install \
+            -n test -f ./charts/services/service-values/gateway-values.yaml \
+            --set image.repository=cr.yandex/$CR_ID/gateway-api \
+            --set image.tag=latest
+
       
-      # TODO setup parameters in classroom/autograding.json
+      
+
+      - name: Wait for services to be ready
+        run: |
+            kubectl wait -n test -l app.kubernetes.io/instance=gateway-api pod --for=condition=Ready --timeout=180s
+            kubectl wait -n test -l app.kubernetes.io/instance=library-service pod --for=condition=Ready --timeout=180s
+            kubectl wait -n test -l app.kubernetes.io/instance=rating-service pod --for=condition=Ready --timeout=180s
+            kubectl wait -n test -l app.kubernetes.io/instance=reservation-service pod --for=condition=Ready --timeout=180s
       
       - name: Autograding
         uses: education/autograding@v1
