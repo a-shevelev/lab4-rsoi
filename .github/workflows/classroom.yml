@@ -81,7 +81,7 @@ jobs:
           yc container registry configure-docker
 
       - name: Get kube credentials
-        run: yc managed-kubernetes cluster get-credentials library-rsoi --external
+        run: yc managed-kubernetes cluster get-credentials lab4-rsoi --external
 
       - name: Deploy to Kubernetes
         run: |
