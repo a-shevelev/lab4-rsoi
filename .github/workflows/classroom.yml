@@ -47,11 +47,6 @@ jobs:
           docker build -t cr.yandex/$CR_ID/gateway-api:latest \
             -f ./src/gateway-api/Dockerfile ./src/gateway-api
           docker push cr.yandex/$CR_ID/gateway-api:latest
-          
-          echo "Building Postgres (your local custom image)..."
-          docker build -t cr.yandex/$CR_ID/postgres:17 \
-            -f ./postgres/Dockerfile ./postgres
-          docker push cr.yandex/$CR_ID/postgres:17
 
       - name: Install Yandex CLI
         run: |
