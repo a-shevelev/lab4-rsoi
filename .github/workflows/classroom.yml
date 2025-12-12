@@ -123,7 +123,7 @@ jobs:
 
       - name: Start port-forward to gateway
         run: |
-          nohup kubectl port-forward service/gateway-service -n default 8080:8080 > port-forward.log 2>&1 &
+          nohup kubectl port-forward service/gateway-api -n default 8080:8080 > port-forward.log 2>&1 &
           echo $! > port-forward.pid
           for i in $(seq 1 30); do
           if nc -z localhost 8080; then
