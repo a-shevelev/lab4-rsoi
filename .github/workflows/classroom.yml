@@ -79,6 +79,9 @@ jobs:
           CR_ID=${{ secrets.YC_CR_ID }}
           
           echo "Deploying Postgres..."
+          
+          helm uninstall postgres -n default || true
+          kubectl delete pvc -n default -l app=postgres || true
           helm upgrade postgres ./charts/postgres --install -n default -f ./charts/postgres/values.yaml
 
           echo "Deploying RabbitMQ..."
