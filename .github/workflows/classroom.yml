@@ -90,20 +90,24 @@ jobs:
           echo "Deploying Postgres..."
           helm upgrade postgres ./charts/postgres --install -n default -f ./charts/postgres/values.yaml
 
+          echo "Deploying RabbitMQ..."
+          helm upgrade rabbitmq ./charts/rabbitmq --install -n default -f ./charts/rabbitmq/values.yaml
+
+          
           echo "Deploying services..."
           
           helm upgrade library-service ./charts/services --install \
-            -n test -f ./charts/services/service-values/libraries-values.yaml \
+            -n test -f ./charts/services/service-values/library-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/library-service \
             --set image.tag=latest
           
           helm upgrade rating-service ./charts/services --install \
-            -n test -f ./charts/services/service-values/ratings-values.yaml \
+            -n test -f ./charts/services/service-values/rating-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/rating-service \
             --set image.tag=latest
           
           helm upgrade reservation-service ./charts/services --install \
-            -n test -f ./charts/services/service-values/reservations-values.yaml \
+            -n test -f ./charts/services/service-values/reservation-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/reservation-service \
             --set image.tag=latest
           
