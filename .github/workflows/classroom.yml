@@ -52,10 +52,10 @@ jobs:
             -f ./src/gateway-api/Dockerfile ./src/gateway-api
           docker push cr.yandex/$CR_ID/gateway-api:latest
           
-          echo "Building Postgres (your local custom image)..."
-          docker build -t cr.yandex/$CR_ID/postgres:17 \
-            -f ./postgres/Dockerfile ./postgres
-          docker push cr.yandex/$CR_ID/postgres:17
+#          echo "Building Postgres (your local custom image)..."
+#          docker build -t cr.yandex/$CR_ID/postgres:17 \
+#            -f ./postgres/Dockerfile ./postgres
+#          docker push cr.yandex/$CR_ID/postgres:17
 
       - name: Install Yandex CLI, kubectl, helm
         run: |
@@ -80,11 +80,8 @@ jobs:
           CR_ID=${{ secrets.YC_CR_ID }}
           
           echo "Deploying Postgres..."
-          helm upgrade postgres ./charts/postgres --install \
-            -n test -f ./charts/postgres/values.yaml \
-            --set image.repository=cr.yandex/$CR_ID/postgres \
-            --set image.tag=17
-          
+          helm upgrade postgres ./charts/postgres --install -n test -f ./charts/postgres/values.yaml
+
           echo "Deploying services..."
           
           helm upgrade library-system ./charts/services --install \
