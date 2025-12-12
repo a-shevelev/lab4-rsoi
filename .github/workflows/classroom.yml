@@ -92,17 +92,17 @@ jobs:
 
           echo "Deploying services..."
           
-          helm upgrade library-system ./charts/services --install \
+          helm upgrade library-service ./charts/services --install \
             -n test -f ./charts/services/service-values/libraries-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/library-service \
             --set image.tag=latest
           
-          helm upgrade rating-system ./charts/services --install \
+          helm upgrade rating-service ./charts/services --install \
             -n test -f ./charts/services/service-values/ratings-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/rating-service \
             --set image.tag=latest
           
-          helm upgrade reservation-system ./charts/services --install \
+          helm upgrade reservation-service ./charts/services --install \
             -n test -f ./charts/services/service-values/reservations-values.yaml \
             --set image.repository=cr.yandex/$CR_ID/reservation-service \
             --set image.tag=latest
